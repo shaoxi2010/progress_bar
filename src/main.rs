@@ -6,8 +6,6 @@ use linuxfb::FrameBuffer;
 use anyhow::{Result, bail};
 use bitmap::{DrawIo, WHITE, BitMap, BitMapResult, PixExt, Point, GREEN, RGB565, Painter, ARGB32};
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 480;
 
 const PROGRESS_WIDTH:usize = 600;
 const PROGRESS_HEIGHT:usize = 80;
@@ -16,15 +14,15 @@ const PROGRESS_BLOCKS:usize = 20;
 const PROGRESS_BLOCK_HEIGHT:usize = PROGRESS_HEIGHT - 2 * PROGRESS_BLOCK_SPARE;
 const PROGRESS_BLOCK_WIDTH:usize = PROGRESS_WIDTH / PROGRESS_BLOCKS - 2 * PROGRESS_BLOCK_SPARE;
 
-fn draw_progress<T: PixExt + Copy + Default>(bitmap: BitMap<T>, val: usize, text: &str) -> BitMapResult<()> {
+fn draw_progress<T: PixExt + Copy + Default>(bitmap: BitMap<T>, val: usize, text: &str, width: usize, height: usize) -> BitMapResult<()> {
     use std::cmp::min;
     let textlen = 16 * text.len();
-    bitmap.draw_text(((WIDTH - textlen) / 2,(HEIGHT - PROGRESS_HEIGHT) / 2 - 32 - PROGRESS_BLOCK_SPARE).into(), WHITE, text, 32)?;
-    bitmap.fill_rectagle(((WIDTH - PROGRESS_WIDTH) / 2, (HEIGHT - PROGRESS_HEIGHT) / 2).into(), PROGRESS_WIDTH, PROGRESS_HEIGHT, WHITE)?; 
+    bitmap.draw_text(((width - textlen) / 2,(height - PROGRESS_HEIGHT) / 2 - 32 - PROGRESS_BLOCK_SPARE).into(), WHITE, text, 32)?;
+    bitmap.fill_rectagle(((width - PROGRESS_WIDTH) / 2, (height - PROGRESS_HEIGHT) / 2).into(), PROGRESS_WIDTH, PROGRESS_HEIGHT, WHITE)?; 
     let val = min(100, val);
     for x in 0..val / (100 / PROGRESS_BLOCKS) {
-        let block_topleft:Point = ((WIDTH - PROGRESS_WIDTH) / 2 + PROGRESS_BLOCK_SPARE + PROGRESS_WIDTH / PROGRESS_BLOCKS * x,
-         (HEIGHT - PROGRESS_HEIGHT) / 2 + PROGRESS_BLOCK_SPARE).into();
+        let block_topleft:Point = ((width - PROGRESS_WIDTH) / 2 + PROGRESS_BLOCK_SPARE + PROGRESS_WIDTH / PROGRESS_BLOCKS * x,
+         (height - PROGRESS_HEIGHT) / 2 + PROGRESS_BLOCK_SPARE).into();
          bitmap.fill_rectagle(block_topleft, PROGRESS_BLOCK_WIDTH, PROGRESS_BLOCK_HEIGHT, GREEN)?;
     }
     Ok(())
@@ -40,13 +38,13 @@ fn main() -> Result<()> {
             if color_depth == 16 {
                 RGB565::painter(data, width, height, |bitmap| {
                     bitmap.clear()?;
-                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)))?;
+                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)), width, height)?;
                     Ok(())
                 })?;
             } else if color_depth == 32 {
                 ARGB32::painter(data, width, height, |bitmap| {
                     bitmap.clear()?;
-                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)))?;
+                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)), width, height)?;
                     Ok(())
                 })?;
             } else {
@@ -57,13 +55,13 @@ fn main() -> Result<()> {
             if color_depth == 16 {
                 RGB565::painter(fb.get_disp_data(), width, height, |bitmap| {
                     bitmap.clear()?;
-                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)))?;
+                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)), width, height)?;
                     Ok(())
                 })?;
             } else if color_depth == 32 {
                 ARGB32::painter(fb.get_disp_data(), width, height, |bitmap| {
                     bitmap.clear()?;
-                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)))?;
+                    draw_progress(bitmap, progress / 10, &format!("Progress:{}%", std::cmp::min(100, progress/10)), width, height)?;
                     Ok(())
                 })?;
             } else {
